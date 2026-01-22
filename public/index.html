@@ -1,0 +1,1382 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>REPLICA ASSIST</title>
+  <style>
+    :root{
+      --bg:#f7fbff; --card:#fff; --text:#0f172a; --muted:#64748b;
+      --line:#e6eef8; --brand:#38bdf8; --brand2:#0ea5e9;
+      --ok:#16a34a; --warn:#f59e0b; --bad:#ef4444; --shadow:0 12px 30px rgba(2,8,23,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    .btn{border:none;border-radius:14px;padding:10px 12px;cursor:pointer;font-weight:900;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+    .btn2{border:1px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;cursor:pointer;font-weight:900}
+    .mini{padding:8px 10px;border-radius:12px;font-size:12px;font-weight:950;cursor:pointer}
+    .mini.primary{border:none;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+    .mini.ghost{border:1px solid var(--line);background:#fff}
+    .mini.danger{border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.08);color:var(--bad)}
+    .inp{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;outline:none;background:#fff}
+    .inp:focus{border-color:rgba(56,189,248,.6); box-shadow:0 0 0 4px rgba(56,189,248,.15)}
+    .tag{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-weight:950;font-size:12px;border:1px solid var(--line)}
+    .t-ok{color:var(--ok);background:rgba(22,163,74,.08)}
+    .t-warn{color:var(--warn);background:rgba(245,158,11,.08)}
+    .t-bad{color:var(--bad);background:rgba(239,68,68,.08)}
+    .t-blue{color:var(--brand2);background:rgba(14,165,233,.08)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:14px}
+    .wrap{display:flex;min-height:100vh}
+    .sidebar{width:260px;background:#fff;border-right:1px solid var(--line);padding:16px;position:sticky;top:0;height:100vh}
+    .main{flex:1;padding:18px}
+    .nav{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+    .nav button{width:100%;text-align:left;border:1px solid var(--line);background:#fff;padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:950;display:flex;justify-content:space-between}
+    .nav button.active{border-color:rgba(56,189,248,.5); background:rgba(56,189,248,.08)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+    .h1{font-size:20px;font-weight:950;margin:0}
+    .hint{color:var(--muted);font-size:13px;margin:2px 0 0}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .stat{grid-column:span 3}
+    .stat .k{color:var(--muted);font-size:12px;font-weight:900}
+    .stat .v{font-size:26px;font-weight:950;margin-top:6px}
+    table{width:100%;border-collapse:separate;border-spacing:0}
+    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
+    th{color:var(--muted);font-size:12px}
+    tr:hover td{background:rgba(56,189,248,.06)}
+    .section{display:none}
+    .section.active{display:block}
+    .split{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+    .chat{height:380px;overflow:auto;border:1px solid var(--line);border-radius:18px;padding:12px;background:rgba(2,132,199,.03)}
+    .msg{max-width:80%;padding:10px 12px;border-radius:16px;margin:8px 0;border:1px solid var(--line);background:#fff}
+    .msg.me{margin-left:auto;border-color:rgba(56,189,248,.45);background:rgba(56,189,248,.10)}
+    .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:6px}
+    .compose{display:flex;gap:8px;margin-top:10px}
+    .compose input{flex:1}
+    .files{display:flex;flex-direction:column;gap:8px}
+    .fileItem{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff}
+    .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:
+      radial-gradient(900px 500px at 10% 10%, rgba(56,189,248,.18), transparent 60%),
+      radial-gradient(900px 500px at 90% 20%, rgba(14,165,233,.14), transparent 55%), var(--bg)}
+    .loginCard{width:min(420px,100%); background:#fff; border:1px solid var(--line); border-radius:24px; box-shadow:var(--shadow); padding:22px}
+    .brandRow{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+    .brandRow img{width:64px;height:64px;border-radius:14px;object-fit:contain;background:#fff;border:1px solid var(--line)}
+    .err{margin-top:10px;color:var(--bad);font-size:13px;display:none}
+    .barBtn{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .notif{
+      position:relative;
+    }
+    .dot{
+      position:absolute;top:-6px;right:-6px;
+      min-width:18px;height:18px;border-radius:999px;
+      background:var(--bad);color:#fff;font-size:11px;font-weight:950;
+      display:flex;align-items:center;justify-content:center;
+      border:2px solid #fff;
+      padding:0 5px;
+    }
+    .panel{
+      position:absolute;right:0;top:40px;z-index:20;
+      width:min(420px, 92vw);
+      background:#fff;border:1px solid var(--line);
+      border-radius:18px;box-shadow:var(--shadow);padding:10px;
+      display:none;
+    }
+    .nitem{padding:10px;border-radius:14px;border:1px solid var(--line);margin:8px 0;background:rgba(2,132,199,.03)}
+    .nitem .t{font-weight:950}
+    .nitem .b{color:var(--muted);font-size:12px;margin-top:4px}
+    .nitem .m{color:var(--muted);font-size:11px;margin-top:6px}
+    @media(max-width:980px){.sidebar{display:none}.split{grid-template-columns:1fr}.stat{grid-column:span 6}}
+  </style>
+</head>
+<body>
+
+<div id="loginView" class="login">
+  <div class="loginCard">
+    <div class="brandRow">
+      <img src="logo.png" alt="logo">
+      <div>
+        <div style="font-weight:950">REPLICA ASSIST</div>
+        <div class="hint">Sistema Integrado de Gestión - IMS</div>
+      </div>
+    </div>
+
+    <label class="hint">Usuario</label>
+    <input id="lgUser" class="inp" placeholder="admin / soporte / soporte2 / user">
+    <div style="height:10px"></div>
+    <label class="hint">Contraseña</label>
+    <input id="lgPass" class="inp" type="password" placeholder="admin123 / soporte123 / user123">
+
+    <div style="height:12px"></div>
+    <button id="btnLogin" class="btn" style="width:100%">Ingresar</button>
+    <div id="lgErr" class="err">Error</div>
+
+    <div class="hint" style="margin-top:12px;line-height:1.35">
+      Demo: <b>admin/admin123</b>, <b>soporte/soporte123</b>, <b>soporte2/soporte123</b>, <b>user/user123</b>
+    </div>
+  </div>
+</div>
+
+<div id="appView" style="display:none">
+  <div class="wrap">
+    <aside class="sidebar">
+      <div class="card" style="box-shadow:none">
+        <div style="display:flex;gap:12px;align-items:center">
+          <img src="logo.png" style="width:60px;height:60px;border-radius:14px;border:1px solid var(--line);background:#fff;object-fit:contain">
+          <div>
+            <div style="font-weight:950">REPLICA ASSIST</div>
+            <div class="hint" id="meInfo">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button id="navDash" onclick="go('dashboard')"><span>Dashboard</span><span class="tag t-blue" id="pillRole">—</span></button>
+        <button id="navTickets" onclick="go('tickets')"><span>Tickets</span><span class="tag t-blue" id="pillTickets">0</span></button>
+        <button id="navUsers" onclick="go('users')" style="display:none"><span>Usuarios</span><span class="tag t-blue">Admin</span></button>
+        <button id="navCompanies" onclick="go('companies')" style="display:none"><span>Empresas</span><span class="tag t-blue">Admin</span></button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="dashboard" class="section active">
+        <div class="topbar">
+          <div>
+            <h1 class="h1">Dashboard</h1>
+            <div class="hint">KPIs + salud operativa</div>
+          </div>
+
+          <div class="barBtn">
+            <button class="mini ghost" onclick="refreshAll()">Refrescar</button>
+            <button class="mini primary" onclick="openNewTicket()">+ Nuevo ticket</button>
+
+            <div class="notif">
+              <button class="mini ghost" onclick="toggleNotif()">🔔 Notificaciones</button>
+              <div id="notifDot" class="dot" style="display:none">0</div>
+              <div id="notifPanel" class="panel">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                  <div style="font-weight:950">Notificaciones</div>
+                  <div style="display:flex;gap:8px">
+                    <button class="mini ghost" onclick="readAll()">Marcar todo leído</button>
+                    <button class="mini ghost" onclick="toggleNotif()">Cerrar</button>
+                  </div>
+                </div>
+                <div id="notifList" style="margin-top:10px"></div>
+              </div>
+            </div>
+
+            <button class="mini danger" onclick="logout()">Salir</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card stat">
+            <div class="k">Tickets total</div>
+            <div class="v" id="mTotal">0</div>
+          </div>
+          <div class="card stat">
+            <div class="k">Abiertos</div>
+            <div class="v" id="mOpen">0</div>
+          </div>
+          <div class="card stat">
+            <div class="k">En retraso</div>
+            <div class="v" id="mDelay">0</div>
+          </div>
+          <div class="card stat">
+            <div class="k">Resueltos</div>
+            <div class="v" id="mResolved">0</div>
+          </div>
+
+          <div class="card" style="grid-column: span 12">
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+              <div>
+                <div style="font-weight:950">Tickets por prioridad</div>
+                <div class="hint">SLA Primera respuesta: Alta 1h · Media 4h · Baja 8h | Resolución: Alta 8h · Media 24h · Baja 72h</div>
+              </div>
+            </div>
+            <div id="prioBars" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tickets" class="section">
+        <div class="topbar">
+          <div>
+            <h1 class="h1">Tickets</h1>
+            <div class="hint">ITIL + chat + adjuntos + SLA/ETA + auditoría</div>
+          </div>
+          <div class="barBtn">
+            <button class="mini ghost" onclick="refreshTickets()">Actualizar</button>
+            <button class="mini primary" onclick="openNewTicket()">+ Nuevo ticket</button>
+            <button class="mini danger" onclick="logout()">Salir</button>
+          </div>
+        </div>
+
+
+        <div class="card">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <input id="tkFilter" class="inp" placeholder="Filtrar..." oninput="renderTickets()" style="max-width:420px">
+            <span class="tag t-blue" id="tkCount">0 tickets</span>
+          </div>
+
+          <div style="margin-top:12px;overflow:auto">
+            <table>
+              <thead>
+                <tr>
+                <th>ID</th><th>Título</th><th>Empresa</th><th>Clasificación</th><th>Prioridad</th><th>Estado</th><th>SLA 1ra resp</th><th>SLA resolución</th><th>ETA</th><th>Asignado</th><th>Acción</th>
+
+                </tr>
+              </thead>
+              <tbody id="ticketsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- NEW TICKET -->
+        <div id="newTicketCard" class="card" style="margin-top:12px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font-weight:950">Nuevo ticket</div>
+            <button class="mini ghost" onclick="closeNewTicket()">Cerrar</button>
+          </div>
+
+          <div class="grid" style="margin-top:10px">
+            <div class="card" style="grid-column:span 6;box-shadow:none">
+              <label class="hint">Empresa</label>
+              <select id="ntCompany" class="inp"></select>
+
+              <label class="hint" style="margin-top:10px;display:block">Marca</label>
+              <select id="ntBrand" class="inp" onchange="onBrandChange()"></select>
+
+              <label class="hint" style="margin-top:10px;display:block">Categoría</label>
+              <select id="ntCategory" class="inp" onchange="onCategoryChange()"></select>
+
+              <label class="hint" style="margin-top:10px;display:block">Subcategoría</label>
+              <select id="ntSubcategory" class="inp" onchange="onSubcategoryChange()"></select>
+
+              <div id="dynamicFields" style="margin-top:10px"></div>
+            </div>
+
+            <div class="card" style="grid-column:span 6;box-shadow:none">
+              <label class="hint">Título</label>
+              <input id="ntTitle" class="inp" placeholder="Ej: No imprime / No accede / Error X">
+
+              <label class="hint" style="margin-top:10px;display:block">Número de contacto</label>
+              <input id="ntPhone" class="inp" placeholder="Ej: +51 999 999 999">
+
+              <label class="hint" style="margin-top:10px;display:block">Prioridad</label>
+              <select id="ntPriority" class="inp">
+                <option>Alta</option>
+                <option selected>Media</option>
+                <option>Baja</option>
+              </select>
+
+              <label class="hint" style="margin-top:10px;display:block">Descripción</label>
+              <textarea id="ntDesc" class="inp" style="height:110px" placeholder="Impacto, evidencia, desde cuándo..."></textarea>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="mini primary" onclick="createTicket()">Crear</button>
+            <button class="mini ghost" onclick="closeNewTicket()">Cancelar</button>
+          </div>
+        </div>
+
+        <!-- DETAIL -->
+        <div id="ticketDetail" class="card" style="margin-top:12px;display:none">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+            <div>
+              <div style="font-weight:950;font-size:16px" id="tdTitle">—</div>
+              <div class="hint" id="tdMeta">—</div>
+            </div>
+            <div id="tdActions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
+          </div>
+
+          <div class="split" style="margin-top:12px">
+            <div>
+              <div style="font-weight:950;margin-bottom:8px">Chat</div>
+              <div class="chat" id="chatBox"></div>
+
+              <div class="compose">
+                <input id="msgInput" class="inp" placeholder="Escribe un mensaje...">
+                <button class="mini primary" onclick="sendMessage()">Enviar</button>
+              </div>
+
+              <div style="margin-top:12px">
+                <div style="font-weight:950;margin-bottom:8px">Adjuntar archivo (máx 10MB)</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                  <input id="fileInput" class="inp" type="file" style="max-width:420px">
+                  <button class="mini ghost" onclick="uploadFile()">Subir</button>
+                </div>
+              </div>
+
+              <div style="margin-top:12px">
+                <div style="font-weight:950;margin-bottom:8px">Auditoría (últimos 50)</div>
+                <div id="auditBox"></div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-weight:950;margin-bottom:8px">SLA & ETA</div>
+              <div class="card" style="box-shadow:none;border-radius:18px;background:rgba(2,132,199,.03)">
+                <div id="slaBox"></div>
+                <div id="etaBox" style="margin-top:10px"></div>
+              </div>
+
+              <div style="font-weight:950;margin:12px 0 8px">Campos del caso</div>
+              <div id="cfBox" class="card" style="box-shadow:none;border-radius:18px;background:rgba(2,132,199,.03)"></div>
+
+              <div style="font-weight:950;margin:12px 0 8px">Archivos</div>
+              <div class="files" id="filesBox"></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section id="companies" class="section">
+        <div class="topbar">
+            <div>
+            <h1 class="h1">Empresas</h1>
+            <div class="hint">Admin: registrar empresas (RUC, contacto, dirección) y administrarlas</div>
+            </div>
+            <div class="barBtn">
+            <button class="mini ghost" onclick="loadCompanies()">Actualizar</button>
+            <button class="mini danger" onclick="logout()">Salir</button>
+            </div>
+        </div>
+
+        <!-- Crear empresa -->
+        <div class="card">
+            <div style="font-weight:950;margin-bottom:10px">Crear empresa</div>
+
+            <div class="grid">
+            <div style="grid-column:span 4">
+                <label class="hint">Nombre *</label>
+                <input id="coName" class="inp" placeholder="Ej: DemoCorp SAC">
+            </div>
+            <div style="grid-column:span 3">
+                <label class="hint">RUC *</label>
+                <input id="coRuc" class="inp" placeholder="11 dígitos">
+            </div>
+            <div style="grid-column:span 5">
+                <label class="hint">Dirección</label>
+                <input id="coAddress" class="inp" placeholder="Av. X 123 - Lima">
+            </div>
+
+            <div style="grid-column:span 4">
+                <label class="hint">Contacto</label>
+                <input id="coContactName" class="inp" placeholder="Nombre contacto">
+            </div>
+            <div style="grid-column:span 4">
+                <label class="hint">Teléfono</label>
+                <input id="coContactPhone" class="inp" placeholder="+51 999 999 999">
+            </div>
+            <div style="grid-column:span 4">
+                <label class="hint">Email</label>
+                <input id="coContactEmail" class="inp" placeholder="correo@empresa.com">
+            </div>
+
+            <div style="grid-column:span 12">
+                <label class="hint">Notas</label>
+                <input id="coNotes" class="inp" placeholder="Observaciones (opcional)">
+            </div>
+            </div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center">
+            <button class="mini primary" onclick="createCompany()">Crear empresa</button>
+            <span id="companyHint" class="hint"></span>
+            </div>
+        </div>
+
+        <!-- Lista empresas -->
+        <div class="card" style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font-weight:950">Lista de empresas</div>
+            <span class="tag t-blue" id="companiesCount">0</span>
+            </div>
+
+            <div style="margin-top:12px;overflow:auto">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th><th>Empresa</th><th>RUC</th><th>Dirección</th><th>Contacto</th><th>Teléfono</th><th>Email</th>
+                </tr>
+                </thead>
+                <tbody id="companiesBody"></tbody>
+            </table>
+            </div>
+
+            <div class="hint" style="margin-top:10px">
+            Próximo paso pro: editar/inactivar empresa + ver usuarios vinculados.
+            </div>
+        </div>
+     </section>
+
+      <section id="users" class="section">
+        <div class="topbar">
+            <div>
+            <h1 class="h1">Usuarios</h1>
+            <div class="hint">Admin: crear usuarios por empresa y rol</div>
+            </div>
+            <div class="barBtn">
+            <button class="mini ghost" onclick="loadUsers()">Actualizar</button>
+            <button class="mini danger" onclick="logout()">Salir</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="font-weight:950;margin-bottom:10px">Crear usuario</div>
+
+            <div class="grid">
+            <div style="grid-column:span 4">
+                <label class="hint">Username</label>
+                <input id="cuUser" class="inp" placeholder="ej: usuario1">
+            </div>
+
+            <div style="grid-column:span 4">
+                <label class="hint">Password</label>
+                <input id="cuPass" class="inp" type="password" placeholder="********">
+            </div>
+
+            <div style="grid-column:span 2">
+                <label class="hint">Rol</label>
+                <select id="cuRole" class="inp" onchange="onRoleChange()">
+                <option value="usuario" selected>usuario</option>
+                <option value="soporte">soporte</option>
+                <option value="admin">admin</option>
+                </select>
+            </div>
+
+            <div style="grid-column:span 2">
+                <label class="hint">Empresa</label>
+                <select id="cuCompany" class="inp"></select>
+            </div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center">
+            <button class="mini primary" onclick="createUser()">Crear</button>
+            <span id="usersCreateHint" class="hint"></span>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font-weight:950">Lista de usuarios</div>
+            <span class="tag t-blue" id="usersCount">0</span>
+            </div>
+
+            <div style="margin-top:12px;overflow:auto">
+            <table>
+                <thead>
+                <tr><th>ID</th><th>Username</th><th>Rol</th><th>Empresa</th></tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+            </table>
+            </div>
+        </div>
+     </section>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  const API = {
+    async req(path, opts = {}) {
+      const token = localStorage.getItem("ims_token");
+      const headers = opts.headers || {};
+      if (!(opts.body instanceof FormData)) headers["Content-Type"] = headers["Content-Type"] || "application/json";
+      if (token) headers["Authorization"] = "Bearer " + token;
+      const res = await fetch(path, { ...opts, headers });
+      const isJson = (res.headers.get("content-type") || "").includes("application/json");
+      const data = isJson ? await res.json() : await res.text();
+      if (!res.ok) throw new Error(data?.error || "Error");
+      return data;
+    }
+  };
+
+  let me = null;
+  let tickets = [];
+  let selectedTicket = null;
+  let supportUsers = [];
+  let timer = null;
+
+  let companies = [], brands = [], categories = [], subcategories = [];
+  let fieldDefs = [];
+  let usersList = [];
+
+  const loginView = document.getElementById("loginView");
+  const appView = document.getElementById("appView");
+  const lgErr = document.getElementById("lgErr");
+
+  document.getElementById("btnLogin").addEventListener("click", login);
+
+  function escapeHtml(s){ return String(s??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function fmt(dt){ if(!dt) return "—"; return String(dt).slice(0,19); }
+
+  function tagStatus(s){
+    if(s==="Retraso") return `<span class="tag t-bad">Retraso</span>`;
+    if(s==="En progreso") return `<span class="tag t-warn">En progreso</span>`;
+    if(s==="Resuelto" || s==="Cerrado") return `<span class="tag t-ok">${escapeHtml(s)}</span>`;
+    return `<span class="tag t-blue">${escapeHtml(s)}</span>`;
+  }
+  function tagPrio(p){
+    if(p==="Alta") return `<span class="tag t-bad">Alta</span>`;
+    if(p==="Media") return `<span class="tag t-warn">Media</span>`;
+    return `<span class="tag t-ok">Baja</span>`;
+  }
+  function dueTag(dueAt, reachedAt){
+    if(!dueAt) return `<span class="tag t-blue">—</span>`;
+    const due = new Date(dueAt.replace(" ","T")+"Z");
+    const reached = reachedAt ? new Date(reachedAt.replace(" ","T")+"Z") : null;
+    const now = new Date();
+    // si ya cumplió (first_response_at o resolved_at), evaluar si fue tardío
+    if(reached){
+      if(reached > due) return `<span class="tag t-bad">Tarde</span>`;
+      return `<span class="tag t-ok">OK</span>`;
+    }
+    // si aún no cumplió, evaluar al momento
+    if(now > due) return `<span class="tag t-bad">Vencido</span>`;
+    return `<span class="tag t-warn">En tiempo</span>`;
+  }
+
+  async function login(){
+    lgErr.style.display="none";
+    try{
+      const username = document.getElementById("lgUser").value.trim();
+      const password = document.getElementById("lgPass").value;
+      const r = await API.req("/api/auth/login",{method:"POST",body:JSON.stringify({username,password})});
+      localStorage.setItem("ims_token", r.token);
+      await loadMe();
+      showApp();
+      await bootstrapMeta();
+      await refreshAll();
+      showAdminNav();
+      if(me.role==="admin"){
+        await loadCompanies();
+      }
+      showUsersNavIfAdmin();
+      if(me.role==="admin"){
+       await loadUsers();
+      }
+    }catch(e){
+      lgErr.textContent=e.message; lgErr.style.display="block";
+    }
+  }
+
+  function logout(){
+    localStorage.removeItem("ims_token");
+    me=null; tickets=[]; selectedTicket=null;
+    if(timer){clearInterval(timer); timer=null;}
+    appView.style.display="none";
+    loginView.style.display="flex";
+  }
+
+  async function loadMe(){
+    const r = await API.req("/api/me");
+    me = r.user;
+    document.getElementById("meInfo").textContent = `${me.username} · ${me.role} · ${me.company_name||"—"}`;
+    document.getElementById("pillRole").textContent = me.role;
+    const navCompanies = document.getElementById("navCompanies");
+    if(navCompanies) navCompanies.style.display = (me.role==="admin") ? "" : "none";
+  }
+
+
+  function showApp(){ loginView.style.display="none"; appView.style.display="block"; }
+
+    function go(id){
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+    if(id==="dashboard") document.getElementById("navDash").classList.add("active");
+    if(id==="tickets") document.getElementById("navTickets").classList.add("active");
+    if(id==="users" && document.getElementById("navUsers")) document.getElementById("navUsers").classList.add("active");
+    if(id==="companies") document.getElementById("navCompanies").classList.add("active");
+    }
+
+  // ---------- Notifications
+  async function refreshNotif(){
+    const r = await API.req("/api/notifications");
+    const dot = document.getElementById("notifDot");
+    if(r.unread>0){ dot.style.display="flex"; dot.textContent = String(r.unread); }
+    else dot.style.display="none";
+
+    const list = document.getElementById("notifList");
+    if(!r.items.length){
+      list.innerHTML = `<div class="hint">Sin notificaciones.</div>`;
+      return;
+    }
+    list.innerHTML = r.items.map(n=>`
+      <div class="nitem" style="${n.is_read? 'opacity:.75':''}">
+        <div class="t">${escapeHtml(n.title)}</div>
+        <div class="b">${escapeHtml(n.body||"")}</div>
+        <div class="m">${fmt(n.created_at)} · ${n.is_read? 'Leído':'No leído'}</div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <button class="mini ghost" onclick="openFromNotif(${n.id})">Abrir</button>
+          ${n.is_read? '' : `<button class="mini ghost" onclick="markRead(${n.id})">Marcar leído</button>`}
+        </div>
+      </div>
+    `).join("");
+  }
+  function toggleNotif(){
+    const p = document.getElementById("notifPanel");
+    p.style.display = (p.style.display==="block") ? "none" : "block";
+    if(p.style.display==="block") refreshNotif();
+  }
+  async function markRead(id){
+    await API.req(`/api/notifications/${id}/read`, {method:"POST"});
+    await refreshNotif();
+  }
+  async function readAll(){
+    await API.req(`/api/notifications/read-all`, {method:"POST"});
+    await refreshNotif();
+  }
+  async function openFromNotif(id){
+    // marca leído y abre ticket si payload tiene ticket_id
+    // (aquí simplificamos: refrescamos y abrimos el último ticket seleccionado por parseo básico)
+    await markRead(id);
+    // refresca tickets y si el título contiene #id no lo tenemos, así que solo abrimos panel de tickets
+    await refreshTickets();
+    go("tickets");
+  }
+
+  // ---------- Meta bootstrap
+    async function bootstrapMeta(){
+        
+    companies = await API.req("/api/meta/companies");
+    brands = await API.req("/api/meta/brands");
+
+    // Empresa
+    const cSel = document.getElementById("ntCompany");
+    cSel.innerHTML =
+        `<option value="">Selecciona…</option>` +
+        companies.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+
+    // Marca
+    const bSel = document.getElementById("ntBrand");
+    bSel.innerHTML =
+        `<option value="">Selecciona…</option>` +
+        brands.map(b=>`<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+
+    // Reset cascada
+    document.getElementById("ntCategory").innerHTML = `<option value="">Selecciona…</option>`;
+    document.getElementById("ntSubcategory").innerHTML = `<option value="">Selecciona…</option>`;
+    document.getElementById("dynamicFields").innerHTML = "";
+
+    if(me && me.role==="admin"){
+        supportUsers = await API.req("/api/users?role=soporte");
+
+        // selector empresa en Crear Usuario
+        const cuCompany = document.getElementById("cuCompany");
+        if(cuCompany){
+        cuCompany.innerHTML =
+            `<option value="">Selecciona…</option>` +
+            companies.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+        }
+    }
+    }
+
+   async function onBrandChange(){
+    const brand_id = document.getElementById("ntBrand").value;
+    const cSel = document.getElementById("ntCategory");
+    const sSel = document.getElementById("ntSubcategory");
+    cSel.innerHTML = `<option value="">Selecciona…</option>`;
+    sSel.innerHTML = `<option value="">Selecciona…</option>`;
+    document.getElementById("dynamicFields").innerHTML = "";
+    if(!brand_id) return;
+    categories = await API.req(`/api/meta/categories?brand_id=${encodeURIComponent(brand_id)}`);
+    cSel.innerHTML = `<option value="">Selecciona…</option>` + categories.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  }
+
+  async function onCategoryChange(){
+    const category_id = document.getElementById("ntCategory").value;
+    const sSel = document.getElementById("ntSubcategory");
+    sSel.innerHTML = `<option value="">Selecciona…</option>`;
+    document.getElementById("dynamicFields").innerHTML = "";
+    if(!category_id) return;
+    subcategories = await API.req(`/api/meta/subcategories?category_id=${encodeURIComponent(category_id)}`);
+    sSel.innerHTML = `<option value="">Selecciona…</option>` + subcategories.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
+  }
+
+  async function onSubcategoryChange(){
+    const subcategory_id = document.getElementById("ntSubcategory").value;
+    const box = document.getElementById("dynamicFields");
+    box.innerHTML = "";
+    fieldDefs = [];
+    if(!subcategory_id) return;
+
+    fieldDefs = await API.req(`/api/meta/subcategory-fields?subcategory_id=${encodeURIComponent(subcategory_id)}`);
+    if(!fieldDefs.length){
+      box.innerHTML = `<div class="hint">Sin campos adicionales para esta subcategoría.</div>`;
+      return;
+    }
+
+    box.innerHTML = `<div class="hint" style="margin-top:6px"><b>Campos del caso</b></div>` + fieldDefs.map(d=>{
+      const req = d.required ? " *" : "";
+      if(d.field_type==="select"){
+        const opts = JSON.parse(d.options_json||"[]");
+        return `
+          <label class="hint" style="margin-top:10px;display:block">${escapeHtml(d.label)}${req}</label>
+          <select class="inp" data-key="${escapeHtml(d.field_key)}">
+            <option value="">Selecciona…</option>
+            ${opts.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join("")}
+          </select>
+        `;
+      }
+      if(d.field_type==="number"){
+        return `
+          <label class="hint" style="margin-top:10px;display:block">${escapeHtml(d.label)}${req}</label>
+          <input class="inp" type="number" data-key="${escapeHtml(d.field_key)}" placeholder="${escapeHtml(d.label)}">
+        `;
+      }
+      return `
+        <label class="hint" style="margin-top:10px;display:block">${escapeHtml(d.label)}${req}</label>
+        <input class="inp" data-key="${escapeHtml(d.field_key)}" placeholder="${escapeHtml(d.label)}">
+      `;
+    }).join("");
+  }
+
+  // ---------- Metrics
+  async function refreshMetrics(){
+    const m = await API.req("/api/dashboard/metrics");
+    document.getElementById("mTotal").textContent = m.tickets.total;
+    document.getElementById("mOpen").textContent = m.tickets.abiertos;
+    document.getElementById("mDelay").textContent = m.tickets.retraso;
+    document.getElementById("mResolved").textContent = m.tickets.resueltos;
+    document.getElementById("pillTickets").textContent = m.tickets.total;
+
+    const map = { Alta:0, Media:0, Baja:0 };
+    (m.tickets.por_prioridad||[]).forEach(x=>map[x.priority]=x.n);
+    const max = Math.max(1,map.Alta,map.Media,map.Baja);
+    const bar = (label,val)=>`
+      <div style="margin:10px 0">
+        <div style="display:flex;justify-content:space-between;color:var(--muted);font-weight:950;font-size:12px"><span>${label}</span><span>${val}</span></div>
+        <div style="height:10px;border-radius:999px;background:rgba(2,132,199,.12);overflow:hidden;border:1px solid var(--line)">
+          <div style="height:10px;width:${(val/max)*100}%;background:linear-gradient(90deg,var(--brand),var(--brand2))"></div>
+        </div>
+      </div>`;
+    document.getElementById("prioBars").innerHTML = bar("Alta",map.Alta)+bar("Media",map.Media)+bar("Baja",map.Baja);
+  }
+
+  // ---------- Tickets
+  async function refreshTickets(){
+    tickets = await API.req("/api/tickets");
+    renderTickets();
+    document.getElementById("tkCount").textContent = tickets.length + " tickets";
+    await refreshMetrics();
+  }
+
+  function renderTickets(){
+    const f = (document.getElementById("tkFilter").value||"").toLowerCase();
+    const rows = tickets.filter(t=>{
+      const s = `${t.id} ${t.title} ${t.company_name} ${t.brand_name} ${t.category_name} ${t.subcategory_name} ${t.priority} ${t.status} ${t.assigned_name||""}`.toLowerCase();
+      return s.includes(f);
+    });
+
+    const body = document.getElementById("ticketsBody");
+    body.innerHTML = rows.map(t=>{
+      const cls = `${t.brand_name} > ${t.category_name} > ${t.subcategory_name}`;
+      const eta = t.eta_due_at ? fmt(t.eta_due_at) : "—";
+      return `
+        <tr>
+          <td>#${t.id}</td>
+          <td style="font-weight:950">${escapeHtml(t.title)}</td>
+          <td>${escapeHtml(t.company_name)}</td>
+          <td>${escapeHtml(cls)}</td>
+          <td>${tagPrio(t.priority)}</td>
+          <td>${tagStatus(t.status)}</td>
+          <td>${dueTag(t.first_response_due_at, t.first_response_at)}</td>
+          <td>${dueTag(t.resolution_due_at, t.resolved_at)}</td>
+          <td>${escapeHtml(eta)}</td>
+          <td>${escapeHtml(t.assigned_name||"—")}</td>
+          <td><button class="mini ghost" onclick="openTicket(${t.id})">Abrir</button></td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function openNewTicket(){
+    document.getElementById("newTicketCard").style.display="block";
+    document.getElementById("ticketDetail").style.display="none";
+    go("tickets");
+  }
+  function closeNewTicket(){ document.getElementById("newTicketCard").style.display="none"; }
+
+  async function createTicket(){
+    const title = document.getElementById("ntTitle").value.trim();
+    const description = document.getElementById("ntDesc").value.trim();
+    const company_id = document.getElementById("ntCompany").value;
+    const brand_id = document.getElementById("ntBrand").value;
+    const category_id = document.getElementById("ntCategory").value;
+    const subcategory_id = document.getElementById("ntSubcategory").value;
+    const contact_phone = document.getElementById("ntPhone").value.trim();
+    const priority = document.getElementById("ntPriority").value;
+
+    if(!title || !description || !company_id || !brand_id || !category_id || !subcategory_id || !contact_phone){
+      return alert("Completa todos los campos requeridos.");
+    }
+
+    // build custom_fields from dynamic inputs
+    const custom_fields = {};
+    document.querySelectorAll("#dynamicFields [data-key]").forEach(el=>{
+      const k = el.getAttribute("data-key");
+      custom_fields[k] = el.value;
+    });
+
+    await API.req("/api/tickets",{
+      method:"POST",
+      body: JSON.stringify({ title, description, company_id, brand_id, category_id, subcategory_id, contact_phone, priority, custom_fields })
+    });
+
+    document.getElementById("ntTitle").value="";
+    document.getElementById("ntDesc").value="";
+    document.getElementById("ntPhone").value="";
+    document.getElementById("ntBrand").value="";
+    document.getElementById("ntCategory").innerHTML = `<option value="">Selecciona…</option>`;
+    document.getElementById("ntSubcategory").innerHTML = `<option value="">Selecciona…</option>`;
+    document.getElementById("dynamicFields").innerHTML = "";
+    closeNewTicket();
+
+    await refreshTickets();
+    await refreshNotif();
+  }
+
+  async function openTicket(id){
+    if(timer){clearInterval(timer); timer=null;}
+    // fetch detail for audit + custom fields
+    const detail = await API.req(`/api/tickets/${id}`);
+    selectedTicket = detail.ticket;
+
+    document.getElementById("ticketDetail").style.display="block";
+    document.getElementById("newTicketCard").style.display="none";
+
+    const cls = `${selectedTicket.brand_name} > ${selectedTicket.category_name} > ${selectedTicket.subcategory_name}`;
+    document.getElementById("tdTitle").textContent = `#${selectedTicket.id} — ${selectedTicket.title}`;
+    document.getElementById("tdMeta").textContent =
+      `${selectedTicket.company_name} · ${cls} · Contacto: ${selectedTicket.contact_phone} · Prioridad: ${selectedTicket.priority}`;
+
+    // Actions
+    const a = document.getElementById("tdActions");
+    a.innerHTML = "";
+
+    if(me.role==="admin"){
+      const opts = supportUsers.map(u=>`<option value="${u.id}" ${String(u.id)===String(selectedTicket.assigned_to)?"selected":""}>${escapeHtml(u.username)}</option>`).join("");
+      a.innerHTML += `
+        <select id="asgnSel" class="inp" style="width:auto;min-width:200px">
+          <option value="">Asignar a soporte…</option>
+          ${opts}
+        </select>
+        <button class="mini primary" onclick="assignSupport()">Asignar</button>
+      `;
+    }
+
+    if(me.role==="soporte"){
+      // tomar ticket si está en cola (sin assigned_to)
+      if(!selectedTicket.assigned_to){
+        a.innerHTML += `<button class="mini primary" onclick="takeTicket()">Tomar ticket</button>`;
+      }
+      a.innerHTML += `
+        <input id="etaMin" class="inp" style="width:160px" type="number" min="1" max="10080" placeholder="ETA (min)">
+        <button class="mini ghost" onclick="setETA()">Set ETA</button>
+      `;
+    }
+
+    if(me.role!=="usuario"){
+      const statuses = ["Nuevo","Asignado","En progreso","Pendiente usuario","Pendiente proveedor","Resuelto","Cerrado"];
+      a.innerHTML += `
+        <select id="stSel" class="inp" style="width:auto;min-width:190px">
+          ${statuses.map(s=>`<option ${s===selectedTicket.status?"selected":""}>${s}</option>`).join("")}
+        </select>
+        <button class="mini ghost" onclick="applyStatus()">Actualizar</button>
+      `;
+    }
+
+    a.innerHTML += `<button class="mini ghost" onclick="closeDetail()">Cerrar</button>`;
+
+    // Chat
+    await loadConversation();
+    // Files
+    await loadFiles();
+    // SLA/ETA
+    renderSlaEta();
+    // Custom fields
+    renderCustomFields(detail.custom_fields);
+    // Audit
+    renderAudit(detail.audit);
+
+    startEtaCountdown();
+  }
+
+  function closeDetail(){
+    if(timer){clearInterval(timer); timer=null;}
+    selectedTicket=null;
+    document.getElementById("ticketDetail").style.display="none";
+  }
+
+async function assignSupport(){
+  try{
+    const sel = document.getElementById("asgnSel");
+    const assigned_to = Number(sel.value);
+    if(!assigned_to) return alert("Selecciona un soporte.");
+
+    console.log("🟦 Asignando ticket", selectedTicket.id, "a", assigned_to);
+
+    await API.req(`/api/tickets/${selectedTicket.id}/assign`, {
+      method:"POST",
+      body: JSON.stringify({ assigned_to })
+    });
+
+    alert("✅ Ticket asignado");
+    await refreshTickets();
+    await openTicket(selectedTicket.id);
+    await refreshNotif();
+  }catch(e){
+    console.error("❌ No asigna:", e);
+    alert("❌ No se pudo asignar: " + (e?.message || e));
+  }
+}
+
+  async function takeTicket(){
+    await API.req(`/api/tickets/${selectedTicket.id}/take`, { method:"POST" });
+    await refreshTickets();
+    await openTicket(selectedTicket.id);
+    await refreshNotif();
+  }
+
+  async function applyStatus(){
+    const status = document.getElementById("stSel").value;
+    await API.req(`/api/tickets/${selectedTicket.id}`, { method:"PATCH", body: JSON.stringify({ status }) });
+    await refreshTickets();
+    await openTicket(selectedTicket.id);
+    await refreshNotif();
+  }
+
+  async function setETA(){
+    const mins = Number(document.getElementById("etaMin").value);
+    if(!mins || mins<=0) return alert("ETA inválido.");
+    await API.req(`/api/tickets/${selectedTicket.id}`, { method:"PATCH", body: JSON.stringify({ estimate_minutes: mins }) });
+    await refreshTickets();
+    await openTicket(selectedTicket.id);
+    await refreshNotif();
+  }
+
+  async function loadConversation(){
+    const msgs = await API.req(`/api/tickets/${selectedTicket.id}/messages`);
+    const box = document.getElementById("chatBox");
+    box.innerHTML = msgs.map(m=>{
+      const isMe = m.author_id === me.id;
+      const badge = m.author_role === "usuario" ? "Usuario" : (m.author_role==="soporte" ? "Soporte" : "Admin");
+      return `
+        <div class="msg ${isMe?"me":""}">
+          <div style="font-weight:950">${escapeHtml(m.username)} <span class="tag t-blue">${badge}</span></div>
+          <div style="margin-top:6px;white-space:pre-wrap">${escapeHtml(m.message)}</div>
+          <div class="meta"><span>${fmt(m.created_at)}</span><span>#${selectedTicket.id}</span></div>
+        </div>
+      `;
+    }).join("");
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function sendMessage(){
+  try{
+    if(!selectedTicket) return alert("No hay ticket seleccionado.");
+
+    const input = document.getElementById("msgInput");
+    const message = (input.value || "").trim();
+    if(!message) return;
+
+    console.log("🟦 Enviando mensaje a ticket", selectedTicket.id, message);
+
+    await API.req(`/api/tickets/${selectedTicket.id}/messages`, {
+      method:"POST",
+      body: JSON.stringify({ message })
+    });
+
+    input.value = "";
+
+    await loadConversation();
+    await refreshTickets();
+    await refreshNotif();
+
+    // refresca el detail (para first_response_at)
+    const detail = await API.req(`/api/tickets/${selectedTicket.id}`);
+    selectedTicket = detail.ticket;
+    renderSlaEta();
+    startEtaCountdown();
+
+  }catch(e){
+    console.error("❌ Error enviando mensaje:", e);
+    alert("❌ No se pudo enviar: " + (e?.message || e));
+  }
+}
+
+
+  async function loadFiles(){
+    const files = await API.req(`/api/tickets/${selectedTicket.id}/attachments`);
+    const fb = document.getElementById("filesBox");
+    fb.innerHTML = files.length ? files.map(f=>`
+      <div class="fileItem">
+        <div>
+          <div style="font-weight:950">${escapeHtml(f.original_name)}</div>
+          <div class="hint">${Math.round(f.size/1024)} KB · ${escapeHtml(f.mime_type)} · ${fmt(f.created_at)}</div>
+        </div>
+        <a class="mini ghost" href="/uploads/${encodeURIComponent(f.stored_name)}" target="_blank" rel="noopener">Abrir</a>
+      </div>
+    `).join("") : `<div class="hint">Sin adjuntos.</div>`;
+  }
+
+  async function uploadFile(){
+    if(!selectedTicket) return;
+    const fi = document.getElementById("fileInput");
+    if(!fi.files || !fi.files[0]) return alert("Selecciona un archivo.");
+    const fd = new FormData();
+    fd.append("file", fi.files[0]);
+    await API.req(`/api/tickets/${selectedTicket.id}/attachments`, { method:"POST", body: fd, headers:{} });
+    fi.value="";
+    await loadFiles();
+  }
+
+  function renderSlaEta(){
+    const t = selectedTicket;
+
+    const box = document.getElementById("slaBox");
+    box.innerHTML = `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="tag t-blue">Estado: ${escapeHtml(t.status)}</span>
+        <span class="tag t-blue">Asignado: ${escapeHtml(t.assigned_name||"—")}</span>
+        <span class="tag t-blue">Contacto: ${escapeHtml(t.contact_phone)}</span>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <span class="tag t-blue">1ra resp vence: ${fmt(t.first_response_due_at)}</span>
+        ${dueTag(t.first_response_due_at, t.first_response_at)}
+        <span class="tag t-blue">Resolución vence: ${fmt(t.resolution_due_at)}</span>
+        ${dueTag(t.resolution_due_at, t.resolved_at)}
+      </div>
+    `;
+
+    const eta = document.getElementById("etaBox");
+    eta.innerHTML = `
+    <div class="hint">ETA (estimación del soporte):</div>
+
+    <div class="card" style="box-shadow:none;border-radius:16px;margin-top:8px;border:1px dashed rgba(14,165,233,.35);background:#fff">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+        <div>
+            <div class="hint">Vence</div>
+            <div style="font-weight:950">${t.eta_due_at ? fmt(t.eta_due_at) : "No definido"}</div>
+        </div>
+
+        <div style="text-align:right">
+            <div class="hint">Cuenta regresiva</div>
+            <div id="etaClock"
+                style="font-weight:1000;font-size:28px;letter-spacing:1px;
+                        padding:8px 12px;border-radius:14px;border:1px solid var(--line);
+                        display:inline-block;min-width:170px">
+            --:--:--
+            </div>
+        </div>
+        </div>
+
+        <div class="hint" style="margin-top:10px">
+        El soporte define este tiempo. Si llega a <b>00:00:00</b>, el sistema marca <b>Retraso</b>.
+        </div>
+    </div>
+    `;
+
+  }
+
+    function startEtaCountdown(){
+    const t = selectedTicket;
+    const el = document.getElementById("etaClock");
+    if(!el) return;
+
+    if(!t || !t.eta_due_at){
+        el.textContent = "Sin ETA";
+        el.style.color = "var(--muted)";
+        el.style.background = "rgba(2,132,199,.03)";
+        return;
+    }
+
+    const due = new Date(t.eta_due_at.replace(" ","T")+"Z");
+    if(timer) clearInterval(timer);
+
+    const paint = (sec)=>{
+        if(sec <= 0){
+        el.textContent = "00:00:00";
+        el.style.color = "var(--bad)";
+        el.style.background = "rgba(239,68,68,.08)";
+        el.style.borderColor = "rgba(239,68,68,.35)";
+        return;
+        }
+        const h = String(Math.floor(sec/3600)).padStart(2,"0");
+        sec%=3600;
+        const m = String(Math.floor(sec/60)).padStart(2,"0");
+        const s = String(sec%60).padStart(2,"0");
+        el.textContent = `${h}:${m}:${s}`;
+
+        // warning si queda poco (ej. 10 min)
+        if((h==="00" && Number(m) < 10)){
+        el.style.color = "var(--warn)";
+        el.style.background = "rgba(245,158,11,.08)";
+        el.style.borderColor = "rgba(245,158,11,.35)";
+        }else{
+        el.style.color = "var(--brand2)";
+        el.style.background = "rgba(14,165,233,.06)";
+        el.style.borderColor = "rgba(14,165,233,.25)";
+        }
+    };
+
+    const tick = async ()=>{
+        const now = new Date();
+        const diff = Math.floor((due.getTime() - now.getTime()) / 1000);
+        paint(diff);
+
+        if(diff <= 0){
+        clearInterval(timer); timer=null;
+        // refresca para ver Retraso aplicado si backend ya lo marcó
+        await refreshTickets();
+        await openTicket(t.id);
+        }
+    };
+
+    tick();
+    timer = setInterval(tick, 1000);
+    }
+
+
+  function renderCustomFields(fields){
+    const box = document.getElementById("cfBox");
+    if(!fields || !fields.length){
+      box.innerHTML = `<div class="hint">Sin campos adicionales.</div>`;
+      return;
+    }
+    box.innerHTML = fields.map(f=>`
+      <div style="display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:8px 0">
+        <div style="font-weight:950">${escapeHtml(f.field_key)}</div>
+        <div class="hint">${escapeHtml(f.field_value||"—")}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderAudit(rows){
+    const box = document.getElementById("auditBox");
+    if(!rows || !rows.length){
+      box.innerHTML = `<div class="hint">Sin auditoría aún.</div>`;
+      return;
+    }
+    box.innerHTML = rows.map(a=>`
+      <div class="card" style="box-shadow:none;margin:8px 0">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div style="font-weight:950">${escapeHtml(a.action)} ${a.field? `· ${escapeHtml(a.field)}`:''}</div>
+          <div class="hint">${fmt(a.created_at)}</div>
+        </div>
+        <div class="hint" style="margin-top:6px">
+          Actor: <b>${escapeHtml(a.actor_name || (a.actor_id===0 ? "system" : String(a.actor_id)))}</b>
+          ${a.from_value || a.to_value ? ` · ${escapeHtml(a.from_value||"—")} → ${escapeHtml(a.to_value||"—")}` : ""}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // ---------- Global refresh
+  async function refreshAll(){
+    await Promise.all([refreshMetrics(), refreshTickets(), refreshNotif()]);
+  }
+
+  function showUsersNavIfAdmin(){
+  const btn = document.getElementById("navUsers");
+  if(!btn) return;
+  btn.style.display = (me?.role === "admin") ? "" : "none";
+}
+
+function onRoleChange(){
+  const role = document.getElementById("cuRole").value;
+  const hint = document.getElementById("usersCreateHint");
+  if(role === "usuario"){
+    hint.textContent = "Tip: para rol usuario, se asigna una empresa.";
+  }else{
+    hint.textContent = "Tip: soporte/admin también pueden tener empresa (opcional).";
+  }
+}
+
+async function loadUsers(){
+  try{
+    if(me?.role !== "admin") return alert("No autorizado.");
+    // Ideal: backend debería devolver company_name también. Si no, mostramos ID.
+    const rows = await API.req("/api/users");
+    usersList = rows;
+
+    document.getElementById("usersCount").textContent = String(rows.length);
+
+    // Mapa company_id -> name para mostrar bonito
+    const cmap = {};
+    companies.forEach(c=>cmap[String(c.id)] = c.name);
+
+    document.getElementById("usersBody").innerHTML = rows.map(u=>`
+      <tr>
+        <td>${u.id}</td>
+        <td style="font-weight:950">${escapeHtml(u.username)}</td>
+        <td><span class="tag t-blue">${escapeHtml(u.role)}</span></td>
+        <td class="hint">${escapeHtml(cmap[String(u.company_id)] || (u.company_id ?? "—"))}</td>
+      </tr>
+    `).join("");
+  }catch(e){
+    console.error(e);
+    alert("❌ No se pudo cargar usuarios: " + (e?.message || e));
+  }
+}
+
+async function createUser(){
+  try{
+    if(me?.role !== "admin") return alert("No autorizado.");
+
+    const username = document.getElementById("cuUser").value.trim();
+    const password = document.getElementById("cuPass").value;
+    const role = document.getElementById("cuRole").value;
+    const company_id = Number(document.getElementById("cuCompany").value);
+
+    if(!username || !password) return alert("Completa username y password.");
+
+    const payload = { username, password, role };
+    if(role === "usuario") payload.company_id = company_id;
+
+    await API.req("/api/users", { method:"POST", body: JSON.stringify(payload) });
+
+    document.getElementById("usersCreateHint").textContent = "✅ Usuario creado";
+    document.getElementById("cuUser").value="";
+    document.getElementById("cuPass").value="";
+
+    await loadUsers();
+  }catch(e){
+    console.error(e);
+    document.getElementById("usersCreateHint").textContent = "";
+    alert("❌ No se pudo crear usuario: " + (e?.message || e));
+  }
+}
+
+
+    function showAdminNav(){
+        const isAdmin = me?.role === "admin";
+        const btnUsers = document.getElementById("navUsers");
+        const btnCompanies = document.getElementById("navCompanies");
+        if(btnUsers) btnUsers.style.display = isAdmin ? "" : "none";
+        if(btnCompanies) btnCompanies.style.display = isAdmin ? "" : "none";
+        }
+
+        async function loadCompanies(){
+        try{
+            if(me?.role !== "admin") return alert("No autorizado.");
+            // usamos meta/companies para listar rápido (admin ve todas)
+            const rows = await API.req("/api/meta/companies");
+
+            // Si tu backend aún devuelve solo id,name,ruc, está OK.
+            // Si devuelve más campos (address, etc.), se pintan; si no, quedarán vacíos.
+            document.getElementById("companiesCount").textContent = String(rows.length);
+        document.getElementById("companiesBody").innerHTML = rows.map(c=>`
+        <tr>
+            <td>${c.id}</td>
+            <td style="font-weight:950">${escapeHtml(c.name)}</td>
+            <td>${escapeHtml(c.ruc || "—")}</td>
+            <td>${escapeHtml(c.address || "—")}</td>
+            <td>${escapeHtml(c.contact_name || "—")}</td>
+            <td>${escapeHtml(c.contact_phone || "—")}</td>
+            <td>${escapeHtml(c.contact_email || "—")}</td>
+            <td>${c.is_active ? `<span class="tag t-ok">Activa</span>` : `<span class="tag t-bad">Inactiva</span>`}</td>
+            <td>
+            <button class="mini ghost" onclick="toggleCompany(${c.id})">Activar/Inactivar</button>
+            </td>
+        </tr>
+        `).join("");
+        }catch(e){
+            console.error(e);
+            alert("❌ No se pudo cargar empresas: " + (e?.message || e));
+        }
+        }
+
+        async function createCompany(){
+        try{
+            if(me?.role !== "admin") return alert("No autorizado.");
+
+            const name = document.getElementById("coName").value.trim();
+            const ruc = document.getElementById("coRuc").value.trim();
+            const address = document.getElementById("coAddress").value.trim();
+            const contact_name = document.getElementById("coContactName").value.trim();
+            const contact_phone = document.getElementById("coContactPhone").value.trim();
+            const contact_email = document.getElementById("coContactEmail").value.trim();
+            const notes = document.getElementById("coNotes").value.trim();
+
+            if(!name) return alert("Nombre requerido.");
+            if(!/^\d{11}$/.test(ruc)) return alert("RUC inválido: debe tener 11 dígitos.");
+
+            await API.req("/api/companies", {
+            method:"POST",
+            body: JSON.stringify({ name, ruc, address, contact_name, contact_phone, contact_email, notes })
+            });
+
+            document.getElementById("companyHint").textContent = "✅ Empresa creada";
+
+            ["coName","coRuc","coAddress","coContactName","coContactPhone","coContactEmail","coNotes"]
+            .forEach(id=>document.getElementById(id).value="");
+
+            // recarga meta (para selector de tickets + users)
+            await bootstrapMeta();
+            await loadCompanies();
+            if(typeof loadUsers === "function") await loadUsers();
+        }catch(e){
+            console.error(e);
+            document.getElementById("companyHint").textContent = "";
+            alert("❌ No se pudo crear empresa: " + (e?.message || e));
+        }
+      }
+            async function toggleCompany(id){
+        try{
+            await API.req(`/api/companies/${id}/toggle`, { method:"POST" });
+            await loadCompanies();
+            await bootstrapMeta(); // refresca selectores
+        }catch(e){
+            alert("❌ No se pudo cambiar estado: " + e.message);
+        }
+        }
+
+
+
+
+  // boot auto
+  (async function boot(){
+    const token = localStorage.getItem("ims_token");
+    if(!token) return;
+    try{
+      await loadMe();
+      showApp();
+      await bootstrapMeta();
+      await refreshAll();
+      showAdminNav();
+      if(me.role==="admin"){
+        await loadCompanies();
+      }
+      showUsersNavIfAdmin();
+    if(me.role==="admin"){
+        await loadUsers();
+    }
+    }catch{
+      logout();
+    }
+  })();
+
+  function closeModal(){
+  const m = document.getElementById("modal");
+  if(m) m.style.display = "none";
+}
+
+</script>
+
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(2,8,23,.35);z-index:50;align-items:center;justify-content:center;padding:18px">
+  <div class="card" style="width:min(720px,95vw)">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+      <div style="font-weight:950" id="modalTitle">—</div>
+      <button class="mini ghost" onclick="closeModal()">Cerrar</button>
+    </div>
+    <div id="modalBody" style="margin-top:12px"></div>
+  </div>
+</div>
+
+</body>
+</html>
