@@ -13,5 +13,10 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
     "sqlite3": "^5.1.7"
-  }
+  },
+  "engines": {
+  "node": "18.x"
 }
+
+}
+
